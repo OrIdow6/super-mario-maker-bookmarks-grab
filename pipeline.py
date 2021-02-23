@@ -181,15 +181,13 @@ class WgetArgs(object):
             '--page-requisites',
             '--timeout', '30',
             '--tries', 'inf',
-            # --domain was this way during testing. Should not matter due to download_child_p being overridden.
-            #   But, in any case, I don't want to test everything again with this changed.
             '--domains', 'voat.co',
             '--span-hosts',
             '--waitretry', '30',
             '--warc-file', ItemInterpolation('%(item_dir)s/%(warc_file_base)s'),
             '--warc-header', 'operator: Archive Team',
-            '--warc-header', 'niconino-dld-script-version: ' + VERSION,
-            '--warc-header', ItemInterpolation('niconino-item: %(item_name)s'),
+            '--warc-header', 'x-wget-at-project-version: ' + VERSION,
+            '--warc-header', 'x-wget-at-project-name: ' + TRACKER_ID,
             '--warc-dedup-url-agnostic',
             '--header', 'Accept-Language: ja',
             '--header', 'Content-Type: text/plain',
