@@ -105,8 +105,9 @@ class PrepareDirectories(SimpleTask):
 
     def process(self, item):
         item_name = item['item_name']
-        escaped_item_name = item_name.replace(':', '_').replace('/', '_').replace('~', '_')
-        dirname = '/'.join((item['data_dir'], escaped_item_name[:30]))
+        item_name_hash = hashlib.sha1(item_name.encode('utf8')).hexdigest()
+        escaped_item_name = item_name_hash
+        dirname = '/'.join((item['data_dir'], escaped_item_name))
 
         if os.path.isdir(dirname):
             shutil.rmtree(dirname)
@@ -116,13 +117,13 @@ class PrepareDirectories(SimpleTask):
         item['item_dir'] = dirname
         item['warc_file_base'] = '-'.join([
             self.warc_prefix,
-            #escaped_item_name[:45],
-            hashlib.sha1(item_name.encode('utf8')).hexdigest(),
+            item_name_hash,
             time.strftime('%Y%m%d-%H%M%S')
         ])
 
         open('%(item_dir)s/%(warc_file_base)s.warc.gz' % item, 'w').close()
         open('%(item_dir)s/%(warc_file_base)s_data.txt' % item, 'w').close()
+
 
 class MoveFiles(SimpleTask):
     def __init__(self):
@@ -188,8 +189,8 @@ class WgetArgs(object):
             '--waitretry', '30',
             '--warc-file', ItemInterpolation('%(item_dir)s/%(warc_file_base)s'),
             '--warc-header', 'operator: Archive Team',
-            '--warc-header', 'niconino-dld-script-version: ' + VERSION,
-            '--warc-header', ItemInterpolation('niconino-item: %(item_name)s'),
+            '--warc-header', 'x-wget-at-project-version: ' + VERSION,
+            '--warc-header', 'x-wget-at-project-name: ' + TRACKER_ID,
             '--warc-dedup-url-agnostic',
             '--header', 'Accept-Language: ja',
             '--header', 'Content-Type: text/plain',
@@ -244,8 +245,9 @@ project = Project(
 
 pipeline = Pipeline(
     CheckIP(),
-    GetItemFromTracker('http://%s/%s' % (TRACKER_HOST, TRACKER_ID), downloader,
-        VERSION),
+    GetItemFromTracker('http://{}/{}/multi={}/'
+        .format(TRACKER_HOST, TRACKER_ID, MULTI_ITEM_SIZE),
+        downloader, VERSION),
     PrepareDirectories(warc_prefix='smackjeeves'),
     WgetDownload(
         WgetArgs(),
