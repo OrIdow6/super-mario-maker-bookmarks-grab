@@ -182,8 +182,14 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   
   if string.match(url, "^https?://www%.nicovideo%.jp/watch/") and status_code == 200 then
     html = read_file(file)
-    if not string.match(html, '<link href="https://nicovideo%.cdn%.nimg%.jp/web/styles/bundle/pages_watch_WatchExceptionPage%.css') then -- 200s on e.g. sm8 (deleted by administrator)
-      -- These scripts are essential for playback, but their URLs (specifically the hex at the end) is unstable
+    -- Georestricted video
+    if string.match(html, 'された地域と同じ地域からのみ視聴できます') or string.match(html, '国からは視聴できません') then
+      print("Video is georestricted - aborting.") -- This is not a debug print, do not remove
+      abortgrab = true
+    end
+    -- Misc errors that give 200s (e.g. vid:sm8 (deleted by administrator))
+    if not string.match(html, '<link href="https://nicovideo%.cdn%.nimg%.jp/web/styles/bundle/pages_watch_WatchExceptionPage%.css') then
+      -- These scripts are essential for playback, but their URLs (specifically the hex at the end) are unstable
       for url in string.gmatch(html, 'src="([^"]+)"') do
         if string.match(url, "watch_dll.+%.js$") or string.match(url, "watch_app.+%.js$") then
           check(url, true)
