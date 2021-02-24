@@ -79,7 +79,8 @@ allowed = function(url, parenturl)
   or string.match(url, "^https?://www%.nicovideo%.jp/video_top/")
   or string.match(url, "^https?://www%.nicovideo%.jp/tag/")
   or string.match(url, "^https?://dic%.nicovideo%.jp/")
-  or string.match(url, "^https?://sp%.nicovideo%.jp/")then
+  or string.match(url, "^https?://sp%.nicovideo%.jp/")
+  or string.match(url, "^https://www%.nicovideo%.jp/api/ria/log%.gif%?name=WatchExceptionPagePvLog") then
     return false
   end
 
