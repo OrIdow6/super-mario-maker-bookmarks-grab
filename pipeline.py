@@ -182,8 +182,6 @@ class WgetArgs(object):
             '--page-requisites',
             '--timeout', '30',
             '--tries', 'inf',
-            # --domain was this way during testing. Should not matter due to download_child_p being overridden.
-            #   But, in any case, I don't want to test everything again with this changed.
             '--domains', 'voat.co',
             '--span-hosts',
             '--waitretry', '30',
