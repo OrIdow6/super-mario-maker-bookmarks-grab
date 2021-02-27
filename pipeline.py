@@ -53,7 +53,7 @@ if not WGET_AT:
 # It will be added to the WARC files and reported to the tracker.
 VERSION = '20210205.01'
 USER_AGENT = 'Archive Team'
-TRACKER_ID = 'niconino'
+TRACKER_ID = 'niconico'
 #TRACKER_HOST = 'legacy-api.arpa.li'
 TRACKER_HOST = "legacy-api.arpa.li"
 MULTI_ITEM_SIZE = 30
@@ -150,7 +150,7 @@ class MaybeSendDoneToTracker(SendDoneToTracker):
 
 CWD = os.getcwd()
 PIPELINE_SHA1 = get_hash(os.path.join(CWD, 'pipeline.py'))
-LUA_SHA1 = get_hash(os.path.join(CWD, 'niconino.lua'))
+LUA_SHA1 = get_hash(os.path.join(CWD, 'niconico.lua'))
 
 def stats_id_function(item):
     d = {
@@ -170,7 +170,7 @@ class WgetArgs(object):
             '-nv',
             '--content-on-error',
             '--load-cookies', 'cookies.txt',
-            '--lua-script', 'niconino.lua',
+            '--lua-script', 'niconico.lua',
             '-o', ItemInterpolation('%(item_dir)s/wget.log'),
             '--no-check-certificate',
             '--output-document', ItemInterpolation('%(item_dir)s/wget.tmp'),
@@ -201,7 +201,7 @@ class WgetArgs(object):
             wget_args.append('item-name://'+item_name)
             item_type, item_value = item_name.split(':', 1)
             if item_type == 'vid':
-                wget_args.extend(['--warc-header', 'niconino-vid: '+item_value])
+                wget_args.extend(['--warc-header', 'niconico-vid: '+item_value])
                 wget_args.append('https://www.nicovideo.jp/watch/' + item_value)
             else:
                 raise ValueError('item_type not supported.')
@@ -213,7 +213,7 @@ class WgetArgs(object):
         #item['item_value'] = item_value
 
         #if item_type == "metadatarange":
-            #wget_args.extend(['--warc-header', 'niconino-metadatarange: ' + item_value])
+            #wget_args.extend(['--warc-header', 'niconico-metadatarange: ' + item_value])
             #[prefix, start, end] = item_value.split("-")
             #for i in range(int(start), int(end)):
                 #wget_args.append(f'https://www.nicovideo.jp/watch/{prefix}{i}')
@@ -235,10 +235,10 @@ class WgetArgs(object):
 # This will be shown in the warrior management panel. The logo should not
 # be too big. The deadline is optional.
 project = Project(
-    title = 'niconino',
+    title = 'niconico',
     project_html = '''
     <img class="project-logo" alt="logo" src="https://wiki.archiveteam.org/images/0/02/Niconico_Official_Logo.png" height="50px"/>
-    <h2>Niconino <span class="links"><a href="http://www.nicovideo.jp/">Website</a> &middot; <a href="http://tracker.archiveteam.org/niconino/">Leaderboard</a></span></h2>
+    <h2>Niconico <span class="links"><a href="http://www.nicovideo.jp/">Website</a> &middot; <a href="http://tracker.archiveteam.org/niconico/">Leaderboard</a></span></h2>
     ''')
 
 pipeline = Pipeline(
@@ -246,7 +246,7 @@ pipeline = Pipeline(
     GetItemFromTracker('http://{}/{}/multi={}/'
         .format(TRACKER_HOST, TRACKER_ID, MULTI_ITEM_SIZE),
         downloader, VERSION),
-    PrepareDirectories(warc_prefix='niconino'),
+    PrepareDirectories(warc_prefix='niconico'),
     WgetDownload(
         WgetArgs(),
         max_tries=1,
