@@ -57,6 +57,13 @@ p_assert = function(v)
   end
 end
 
+do_debug = false
+print_debug = function(a)
+    if do_debug then
+        print(a)
+    end
+end
+
 allowed = function(url, parenturl)
   -- Do not queue any more watch pages
   -- Also prevents it from picking up many junk links that are on these pages for some reason
@@ -220,7 +227,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     post_finished[post_current] = true
     post_current = table.remove(post_queue)
     table.insert(urls, { url="http://nmsg.nicovideo.jp/api", post_data=post_current,headers={["Content-Type"]="text/plain"} })
-    print(post_current) -- DEBUG
+    print_debug(post_current)
   end
     
   local function addpost(data)
@@ -232,14 +239,13 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       post_current = table.remove(post_queue)
       if post_current ~= nil then
         table.insert(urls, { url="http://nmsg.nicovideo.jp/api", post_data=post_current, headers={["Content-Type"]="text/plain"}})
-        print(post_current) -- DEBUG
+        print_debug(post_current)
       end
     end
   end
   
   if string.match(url, "^https?://flapi.nicovideo.jp/api/getwaybackkey") and status_code == 200 then
     html = read_file(file)
-    print(html) -- DEBUG
     thread_id = string.match(url, "thread=([0-9]+)$")
     waybackkey = string.match(html, "waybackkey=(.+)$")
     p_assert(thread_id)
@@ -269,9 +275,6 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
     
     nextpost()
-  elseif url == "http://nmsg.nicovideo.jp/api" then -- DEBUG
-    print(read_file(file))
-    print(post_current)
   end
   
 

@@ -55,7 +55,7 @@ VERSION = '20210205.01'
 USER_AGENT = 'Archive Team'
 TRACKER_ID = 'niconino'
 #TRACKER_HOST = 'legacy-api.arpa.li'
-TRACKER_HOST = "THIS IS NOT READY YET!!!!!!"
+TRACKER_HOST = "legacy-api.arpa.li"
 MULTI_ITEM_SIZE = 30
 
 
