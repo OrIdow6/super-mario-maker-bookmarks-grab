@@ -1,3 +1,5 @@
+# This is not yet the final version of this grab script. If you are not involved in development of this project, you should not do anything with what is here now, and wait until this code is transferred over to the ArchiveTeam organization, at which point Docker images and a Warrior project will become available. If you are running manually, you will have to update, anyway.
+
 super-mario-maker-bookmarks-grab
 =============
 This is a script you can run to grab the Super Mario Maker bookmarks site. Right now we are not saving the levels themselves, because they are not going offline; but because they are being frozen, we intend to save them as well.
