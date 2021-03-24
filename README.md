@@ -3,7 +3,7 @@ super-mario-maker-bookmarks-grab
 This is a script you can run to grab the Super Mario Maker bookmarks site. Right now we are not saving the levels themselves, because they are not going offline; but because they are being frozen, we intend to save them as well.
 
 
-More information about the archiving project can be found on the ArchiveTeam wiki: [Niconico](https://wiki.archiveteam.org/index.php?title=Niconico)
+More information about the archiving project can be found on the ArchiveTeam wiki: [Super Mario Maker Bookmark](https://wiki.archiveteam.org/index.php/Super_Mario_Maker_Bookmark)
 
 Setup instructions
 =========================
