@@ -110,6 +110,12 @@ allowed = function(url, parenturl)
     or string.match(url, "^https?://www%.esrb%.org/") then
     return false
   end
+  
+  -- b64 that gets picked up somewhere
+  if string.match(url, "==$") then
+    return false
+  end
+  
   local tested = {}
   for s in string.gmatch(url, "([^/]+)") do
     if tested[s] == nil then
