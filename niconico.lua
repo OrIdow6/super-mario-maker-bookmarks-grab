@@ -1,10 +1,11 @@
 dofile("table_show.lua")
 dofile("urlcode.lua")
 local urlparse = require("socket.url")
+local luasocket = require("socket") -- Used to get sub-second time
 local http = require("socket.http")
 JSON = assert(loadfile "JSON.lua")()
 
-local item_value = os.getenv('item_value')
+local item_name_newline = os.getenv("item_name_newline")
 local item_dir = os.getenv('item_dir')
 local warc_file_base = os.getenv('warc_file_base')
 
@@ -15,14 +16,9 @@ local addedtolist = {}
 local abortgrab = false
 
 
+discovered_items = {}
 
--- Keep track of what's been POSTed to http://nmsg.nicovideo.jp/api
-local post_queue = {}
-local post_current = nil
-local post_finished = {}
-
-local user_id = nil
-
+last_main_site_time = 0
 
 
 if urlparse == nil or http == nil then
@@ -33,7 +29,11 @@ end
 
 for ignore in io.open("ignore-list", "r"):lines() do
   downloaded[ignore] = true
-  downloaded[string.gsub(ignore, '^https', 'http', 1)] = true
+  if string.match(ignore, '^https:') then
+    downloaded[string.gsub(ignore, '^https', 'http', 1)] = true
+  elseif string.match(ignore, '^http:') then
+    downloaded[string.gsub(ignore, '^http:', 'https:', 1)] = true
+  end
 end
 
 read_file = function(file)
@@ -63,34 +63,53 @@ print_debug = function(a)
         print(a)
     end
 end
+print_debug("The grab script is running in debug mode. You should not see this in production.")
 
 allowed = function(url, parenturl)
-  -- Do not queue any more watch pages
-  -- Also prevents it from picking up many junk links that are on these pages for some reason
-  if string.match(url, "^https?://www%.nicovideo%.jp/watch/") then
-    return false
-  end
-  
-  
-  if string.match(url, "^https?://account%.nicovideo%.jp")
-  or (string.match(url, "^https?://nicovideo%.cdn%.nimg%.jp")
-      and not string.match(url, "nicoaccount"))
-  or string.match(url, "^https?://m%.nicovideo%.jp")
-  or string.match(url, "^https?://embed%.nicovideo%.jp")
-  or string.match(url, "^https?://qa%.nicovideo%.jp")
-  or string.match(url, "^https?://secure%.nicovideo%.jp") 
-  or string.match(url, "^https?://[^/]googletagmanager")
-  or string.match(url, "^https?://[^/]+%.ads%.nicovideo%.jp")
-  or string.match(url, "^https?://ads%.nicovideo%.jp")
-  or string.match(url, "^https?://nmsg%.nicovideo%.jp")
-  or string.match(url, "^https?://www%.nicovideo%.jp/video_top/")
-  or string.match(url, "^https?://www%.nicovideo%.jp/tag/")
-  or string.match(url, "^https?://dic%.nicovideo%.jp/")
-  or string.match(url, "^https?://sp%.nicovideo%.jp/")
-  or string.match(url, "^https://www%.nicovideo%.jp/api/ria/log%.gif%?name=WatchExceptionPagePvLog") then
-    return false
-  end
+  -- Do not recurse to other item base URLs
 
+  -- page-less e.g. "type=first_holder" have "force" set on check, so this will not block them
+  if string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/profile/") and not string.match(url, "page=") then
+    username = string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/profile/([^%?&]+)")
+    p_assert(string.match(username, "^[^/ ]+$"))
+    if not string.match(item_name_newline, username) then
+      discovered_items["user:" .. username] = true
+    end
+    return false
+  end
+  if string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/") then
+    course_name = string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/([^%?&/]+)")
+    p_assert(string.match(course_name, "^[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]$"))
+    if not string.match(item_name_newline, course_name) then
+      discovered_items["course:" .. course_name] = true
+    end
+    return false
+  end
+  
+  -- Only get course images on course pages, and profile images on profile pages
+  if string.match(url, "^https?://dypqnhofrd2x2%.cloudfront%.net/.*jpg$") then -- Course images
+    p_assert(parenturl)
+    if string.match(parenturl, "^https?://supermariomakerbookmark%.nintendo%.net/profile/") then
+      print_debug("Rejecting " .. url .. " because it came from a profile page")
+      return false
+    end
+  elseif string.match(url, "^https?://mii%-secure%.cdn%.nintendo%.net/.*png$") then -- Profile images
+    p_assert(parenturl)
+    if not string.match(parenturl, "^https?://mii%-secure%.cdn%.nintendo%.net/.*png$") then
+      print_debug("Rejecting " .. url .. " because it did not come from another image.")
+      return false
+    end
+  end
+  
+  
+  -- General restrictions
+  if string.match(url, "^https?://supermariomakerbookmark%.nintendo%.net/[^/]*$")
+    or string.match(url, "^https?://www%.googletagmanager%.com")
+    or string.match(url, "^https?://supermariomakerbookmark%.nintendo%.net/users/") -- Auth
+    or string.match(url, "^https?://supermariomakerbookmark%.nintendo%.net/assets/") -- Static
+    or string.match(url, "^https?://www%.esrb%.org/") then
+    return false
+  end
   local tested = {}
   for s in string.gmatch(url, "([^/]+)") do
     if tested[s] == nil then
@@ -101,12 +120,8 @@ allowed = function(url, parenturl)
     end
     tested[s] = tested[s] + 1
   end
-  
-  if string.match(url, "^https?://[^/]+%.nicovideo%.jp") then
-    return true
-  end
-
-  --#return false
+      
+  return true
 end
 
 wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_parsed, iri, verdict, reason)
@@ -114,7 +129,7 @@ wget.callbacks.download_child_p = function(urlpos, parent, depth, start_url_pars
   if downloaded[url] == true or addedtolist[url] == true then
     return false
   end
-  if allowed(url) then
+  if allowed(url, parent["url"]) then
     addedtolist[url] = true
     return true
   end
@@ -129,6 +144,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   downloaded[url] = true
 
   local function check(urla, force)
+    p_assert((not force) or (force == true)) -- Don't accidentally put something else for force
     local origurl = url
     local url = string.match(urla, "^([^#]+)")
     local url_ = string.match(url, "^(.-)%.?$")
@@ -188,101 +204,44 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     end
   end
   
-  if string.match(url, "^https?://www%.nicovideo%.jp/watch/") and status_code == 200 then
-    html = read_file(file)
-    -- Georestricted video
-    if string.match(html, 'された地域と同じ地域からのみ視聴できます') or string.match(html, '国からは視聴できません') then
-      print("Video is georestricted - aborting.") -- This is not a debug print, do not remove
-      abortgrab = true
-    end
-    -- Misc errors that give 200s (e.g. vid:sm8 (deleted by administrator))
-    if not string.match(html, '<link href="https://nicovideo%.cdn%.nimg%.jp/web/styles/bundle/pages_watch_WatchExceptionPage%.css') then
-      -- These scripts are essential for playback, but their URLs (specifically the hex at the end) are unstable
-      for url in string.gmatch(html, 'src="([^"]+)"') do
-        if string.match(url, "watch_dll.+%.js$") or string.match(url, "watch_app.+%.js$") then
-          check(url, true)
-        end
-      end
-      
-      profile_picture = string.match(html, "(https:\\/\\/secure%-dcdn%.cdn%.nimg%.jp\\/nicoaccount\\/usericon\\/[0-9]+\\/[0-9]+%.[a-z]+%?[0-9]+)")
-      if not string.match(html, "(https:\\/\\/secure%-dcdn%.cdn%.nimg%.jp\\/nicoaccount\\/usericon\\/defaults\\/blank.jpg)") then -- Don't want this, obviously
-        p_assert(profile_picture)
-        
-        profile_picture = string.gsub(profile_picture, "\\/", "/")
-        check(profile_picture, true)
-      end
-      
-      -- Now start the comment downloading process
-      --user_id = string.match(html, "user.user_id = '([0-9]+)'")
-      user_id = "118049508"
-      thread_id_section = string.match(html, "threadIds&quot(.+)&quot;tags")
-      p_assert(thread_id_section)
-      for thread_id in string.gmatch(thread_id_section, "[0-9][0-9][0-9]+") do
-        check("https://flapi.nicovideo.jp/api/getwaybackkey?thread=" .. thread_id)
-      end
+  local function load_html()
+    if html == nil then
+      html = read_file(file)
     end
   end
   
-  local function nextpost()
-    post_finished[post_current] = true
-    post_current = table.remove(post_queue)
-    table.insert(urls, { url="http://nmsg.nicovideo.jp/api", post_data=post_current,headers={["Content-Type"]="text/plain"} })
-    print_debug(post_current)
-  end
+  
+  if string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/profile/[^/%?]+$") and status_code == 200 then
+    check(url .. "?type=posted", true)
+    check(url .. "?type=liked", true)
+    check(url .. "?type=fastest_holder", true)
+    check(url .. "?type=first_holder", true)
     
-  local function addpost(data)
-    if post_finished[data] == true or data == post_current then
-      return
-    end
-    table.insert(post_queue, data)
-    if post_current == nil then
-      post_current = table.remove(post_queue)
-      if post_current ~= nil then
-        table.insert(urls, { url="http://nmsg.nicovideo.jp/api", post_data=post_current, headers={["Content-Type"]="text/plain"}})
-        print_debug(post_current)
-      end
-    end
-  end
-  
-  if string.match(url, "^https?://flapi.nicovideo.jp/api/getwaybackkey") and status_code == 200 then
-    html = read_file(file)
-    thread_id = string.match(url, "thread=([0-9]+)$")
-    waybackkey = string.match(html, "waybackkey=(.+)$")
-    p_assert(thread_id)
-    p_assert(waybackkey)
-    -- Japanese
-    addpost('<thread thread="' .. thread_id .. '" version="20061206" res_from="1" when="1700000000" waybackkey="' .. waybackkey .. '" user_id="' .. user_id .. '"/>')
-    -- English
-    addpost('<thread thread="' .. thread_id .. '" version="20061206" res_from="1" when="1700000000" waybackkey="' .. waybackkey .. '" user_id="' .. user_id .. '" language="1"/>')
-    -- Chinese
-    addpost('<thread thread="' .. thread_id .. '" version="20061206" res_from="1" when="1700000000" waybackkey="' .. waybackkey .. '" user_id="' .. user_id .. '" language="2"/>')
-  end
-  
-  if url == "http://nmsg.nicovideo.jp/api" and status_code == 200 then
-    html = read_file(file)
-    -- Queue the previous block of comments, if not yet at the end
-    min_date = nil
-    for date in string.gmatch(html, ' date="([0-9][0-9][0-9][0-9]+)"') do
-      i = tonumber(date)
-      if min_date == nil or i < min_date then
-        min_date = i
-      end
-    end
+    load_html()
     
-    if min_date ~= nil then
-      -- when is noninclusive, so this will not include the min_date comment
-      addpost(string.gsub(post_current, ' when="[0-9]+"', ' when="' .. tostring(min_date) .. '"'))
-    end
+    p_assert(string.match(html, "Play History"))
     
-    nextpost()
+    profile_image = string.match(html, '<img class="mii" src="(https?://mii%-secure%.cdn%.nintendo%.net/[^"]*png)" alt="[^>]+" />')
+    p_assert(profile_image)
+    check(profile_image, true)
   end
   
+  if string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/course/") and status_code == 200 then
+    load_html()
+    p_assert(string.match(html, "Course Tag"))
+  end
+  
+  -- Queue alternate profile picture types
+  if string.match(url, "https?://mii%-secure%.cdn%.nintendo%.net/.*png$") then
+    check((string.gsub(url, "normal", "like")))
+    check((string.gsub(url, "like", "normal")))
+    print_debug("Queuing alternate face from " .. url)
+  end
 
   
 
-  -- T
-  if allowed(url, nil) and status_code == 200 then
-    html = read_file(file)
+  if status_code == 200 and not (string.match(url, "jpe?g$") or string.match(url, "png$")) then
+    load_html()
     for newurl in string.gmatch(string.gsub(html, "&quot;", '"'), '([^"]+)') do
       checknewurl(newurl)
     end
@@ -331,46 +290,110 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     io.stdout:flush()
     return wget.actions.ABORT
   end
+  
+  
+  if status_code == 403 and (string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/profile/")
+                             or string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/")) then
+    print("You have been banned from the Super Mario Maker website. Switch your worker to another project, and wait a few hours to be unbanned.")
+    print("This should not happen if you are running one concurrency per IP address.")
+    os.execute("sleep " .. 60) -- Do not spam the tracker (or the site)
+    return wget.actions.EXIT
+  end
+  
+  --
+  
+  if string.match(url["url"], "^https?://supermariomakerbookmark%.nintendo%.net") then
+    -- Sleep for up to 2s average
+    local now_t = luasocket.gettime()
+    local makeup_time = 2 - (now_t - last_main_site_time)
+    if makeup_time > 0 then
+      print_debug("Sleeping for main site " .. makeup_time)
+      os.execute("sleep " .. makeup_time)
+    end
+    last_main_site_time = now_t
+  end
+  
+  --
 
+  
+  local do_retry = false
+  local maxtries = 12
+  local url_is_essential = false
   
   if status_code == 0
     or (status_code > 400 and status_code ~= 404) then
     io.stdout:write("Server returned " .. http_stat.statcode .. " (" .. err .. "). Sleeping.\n")
     io.stdout:flush()
-    local maxtries = 12
-    if not (allowed(url["url"], nil) or string.match(url["url"], "^https?://www%.nicovideo%.jp/watch/")) then
-      maxtries = 3
-    end
+    do_retry = true
+  end
+  
+  --url_is_essential = string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/profile/[^\?]+$")
+  -- or string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/")
+  url_is_essential = true -- For now, all URLS, including CDN urls, are considered such
+  
+  
+  if do_retry then
     if tries >= maxtries then
       io.stdout:write("I give up...\n")
       io.stdout:flush()
       tries = 0
-      if maxtries == 3 then
+      if not url_is_essential then
         return wget.actions.EXIT
       else
+        print("Failed on an essential URL, aborting...")
         return wget.actions.ABORT
       end
     else
-      if string.match(url["url"], "^https?://www%.nicovideo%.jp/watch/") and status_code == 503 then
-        -- Their version of a 429
-        os.execute("sleep 60")
-      else
-        os.execute("sleep " .. math.floor(math.pow(2, tries)))
-      end
+      sleep_time = math.floor(math.pow(2, tries))
       tries = tries + 1
-      return wget.actions.CONTINUE
     end
   end
 
-  tries = 0
 
-  local sleep_time = 0
-
-  if sleep_time > 0.001 then
+  if do_retry and sleep_time > 0.001 then
+    print("Sleeping " .. sleep_time .. "s")
     os.execute("sleep " .. sleep_time)
+    return wget.actions.CONTINUE
   end
-
+  
+  tries = 0
   return wget.actions.NOTHING
+end
+
+
+wget.callbacks.finish = function(start_time, end_time, wall_time, numurls, total_downloaded_bytes, total_download_time)
+  if do_debug then
+    for item, _ in pairs(discovered_items) do
+      print("Would have sent discovered item " .. item)
+    end
+  else
+    to_send = nil
+    for item, _ in pairs(discovered_items) do
+      if to_send == nil then
+        to_send = url
+      else
+        to_send = to_send .. "\0" .. item
+      end
+    end
+
+    if to_send ~= nil then
+      local tries = 0
+      while tries < 10 do
+        local body, code, headers, status = http.request(
+          "http://blackbird-amqp.meo.ws:23038/whatever/",
+          to_send
+        )
+        if code == 200 or code == 409 then
+          break
+        end
+        os.execute("sleep " .. math.floor(math.pow(2, tries)))
+        tries = tries + 1
+      end
+      if tries == 10 then
+        abortgrab = true
+      end
+    end
+  end
 end
 
 

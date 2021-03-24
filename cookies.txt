@@ -1,2 +1,0 @@
-nicovideo.jp	TRUE	/	FALSE	1704096000	lang	ja-jp
-nicovideo.jp	TRUE	/	FALSE	1704096000	user_session	user_session_118049508_78e2b3b9c0b55902bd7d65c57ecf43ce41b7083b012f7b5cde49bc2dff13954f

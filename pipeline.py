@@ -39,7 +39,10 @@ WGET_AT = find_executable(
     [
         'GNU Wget 1.20.3-at.20210212.02',
     ],
-    ['./wget-at']
+    [
+        './wget-at',
+        '/home/warrior/data/wget-at'
+    ]
 )
 
 if not WGET_AT:
@@ -52,7 +55,7 @@ if not WGET_AT:
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
 VERSION = '20210227.01'
-USER_AGENT = 'Archive Team'
+USER_AGENT = 'Archive Team (ircs://irc.hackint.org#nintendone https://webirc.hackint.org/#irc://irc.hackint.org/#nintendone)'
 TRACKER_ID = 'niconico'
 #TRACKER_HOST = 'legacy-api.arpa.li'
 TRACKER_HOST = "legacy-api.arpa.li"
@@ -190,35 +193,24 @@ class WgetArgs(object):
             '--warc-header', 'x-wget-at-project-version: ' + VERSION,
             '--warc-header', 'x-wget-at-project-name: ' + TRACKER_ID,
             '--warc-dedup-url-agnostic',
-            '--header', 'Accept-Language: ja',
-            '--header', 'Content-Type: text/plain',
+            '--warc-compression-use-zstd'
         ]
         
         item_names = item['item_name'].split('\0')
+        item['item_name_newline'] = item['item_name'].replace('\0', '\n')
 
         for item_name in item_names:
             wget_args.extend(['--warc-header', 'x-wget-at-project-item-name: '+item_name])
-            wget_args.append('item-name://'+item_name)
+            wget_args.append('item-name://' + item_name)
             item_type, item_value = item_name.split(':', 1)
-            if item_type == 'vid':
-                wget_args.extend(['--warc-header', 'niconico-vid: '+item_value])
-                wget_args.append('https://www.nicovideo.jp/watch/' + item_value)
+            if item_type == "user":
+                wget_args.extend(['--warc-header', 'super-mario-world-bookmarks-user: '+item_value])
+                wget_args.append('https://supermariomakerbookmark.nintendo.net/profile/' + item_value)
+            elif item_type == "course":
+                wget_args.extend(['--warc-header', 'super-mario-world-bookmarks-course: ' + item_value])
+                wget_args.append('https://supermariomakerbookmark.nintendo.net/courses/' + item_value)
             else:
                 raise ValueError('item_type not supported.')
-
-        #item_name = item['item_name']
-        #item_type, item_value = item_name.split(':')
-
-        #item['item_type'] = item_type
-        #item['item_value'] = item_value
-
-        #if item_type == "metadatarange":
-            #wget_args.extend(['--warc-header', 'niconico-metadatarange: ' + item_value])
-            #[prefix, start, end] = item_value.split("-")
-            #for i in range(int(start), int(end)):
-                #wget_args.append(f'https://www.nicovideo.jp/watch/{prefix}{i}')
-        #else:
-            #raise ValueError('item_type not supported.')
 
         if 'bind_address' in globals():
             wget_args.extend(['--bind-address', globals()['bind_address']])
@@ -254,6 +246,7 @@ pipeline = Pipeline(
         env={
             'item_dir': ItemValue('item_dir'),
             'warc_file_base': ItemValue('warc_file_base'),
+            'item_name_newline': ItemValue('item_name_newline'),
         }
     ),
     PrepareStatsForTracker(

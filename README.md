@@ -1,5 +1,7 @@
-niconico-grab
+super-mario-maker-bookmarks-grab
 =============
+This is a script you can run to grab the Super Mario Maker bookmarks site. Right now we are not saving the levels themselves, because they are not going offline; but because they are being frozen, we intend to save them as well.
+
 
 More information about the archiving project can be found on the ArchiveTeam wiki: [Niconico](https://wiki.archiveteam.org/index.php?title=Niconico)
 
@@ -12,15 +14,14 @@ In most of the below cases, there will be a web interface running at http://loca
 
 **If anything goes wrong while running the commands below, please scroll down to the bottom of this page. There's troubleshooting information there.**
 
-Running with Docker
--------------------------
-Tech234a has written a page about how to run projects in Docker [here](https://www.archiveteam.org/index.php?title=Running_Archive_Team_Projects_with_Docker).
-
 Running with a warrior
 -------------------------
 
-This project is currently broken in warrior, due to its having a zstd dependency that is too new for the warrior's Ubuntu image. This will hopefully be fixed within the next few months. These instructions are outdated.
-Follow the [instructions on the ArchiveTeam wiki](http://archiveteam.org/index.php?title=Warrior) for installing the Warrior, and select the "Voat" project in the Warrior interface.
+Follow the [instructions on the ArchiveTeam wiki](http://archiveteam.org/index.php?title=Warrior) for installing the Warrior, and select the "Super Mario Maker Bookmarks" project in the Warrior interface.
+
+Running with Docker
+-------------------------
+Tech234a has written a page about how to run projects in Docker [here](https://www.archiveteam.org/index.php?title=Running_Archive_Team_Projects_with_Docker).
 
 Running without a warrior
 -------------------------
@@ -70,8 +71,8 @@ Package `libzstd-dev` version 1.4.4 is required which is currently available fro
     && apt-get -t buster-backports install zstd libzstd-dev libzstd1
     python3 -m pip install setuptools wheel
     python3 -m pip install --upgrade seesaw zstandard requests
-    su -c "cd /home/archiveteam; git clone https://github.com/ArchiveTeam/niconico-grab.git; cd niconico-grab; ./get-wget-lua.sh" archiveteam
-    screen su -c "cd /home/archiveteam/niconico-grab/; run-pipeline3 pipeline.py --concurrent 2 --address '127.0.0.1' YOURNICKHERE" archiveteam
+    su -c "cd /home/archiveteam; git clone https://github.com/ArchiveTeam/super-mario-maker-bookmarks-grab.git; cd super-mario-maker-bookmarks-grab; ./get-wget-lua.sh" archiveteam
+    screen su -c "cd /home/archiveteam/super-mario-maker-bookmarks-grab/; run-pipeline3 pipeline.py --concurrent 2 --address '127.0.0.1' YOURNICKHERE" archiveteam
     [... ctrl+A D to detach ...]
 
 In __Debian Jessie, Ubuntu 18.04 Bionic and above__, the `libgnutls-dev` package was renamed to `libgnutls28-dev`. So, you need to do the following instead:
@@ -114,7 +115,7 @@ You need Homebrew. Ensure that you have the OS X equivalent of bzip2 installed a
     pip install --upgrade seesaw
     [... pretty much the same as above ...]
 
-**There is a known issue with some packaged versions of rsync. If you get errors during the upload stage, niconico-grab will not work with your rsync version.**
+**There is a known issue with some packaged versions of rsync. If you get errors during the upload stage, super-mario-maker-bookmarks-grab will not work with your rsync version.**
 
 This supposedly fixes it:
 
@@ -129,15 +130,15 @@ Ensure that you have the Arch equivalent of bzip2 installed as well.
 3. Run `pip2 install --upgrade seesaw`.
 4. Modify the run-pipeline script in seesaw to point at `#!/usr/bin/python2` instead of `#!/usr/bin/python`.
 5. `useradd --system --group users --shell /bin/bash --create-home archiveteam`
-6. `screen su -c "cd /home/archiveteam/niconico-grab/; run-pipeline pipeline.py --concurrent 2 --address '127.0.0.1' YOURNICKHERE" archiveteam`
+6. `screen su -c "cd /home/archiveteam/super-mario-maker-bookmarks-grab/; run-pipeline pipeline.py --concurrent 2 --address '127.0.0.1' YOURNICKHERE" archiveteam`
 
 ### For Alpine Linux:
 
     apk add lua5.1 git python bzip2 bash rsync gcc libc-dev lua5.1-dev zlib-dev gnutls-dev autoconf flex make
     python -m ensurepip
     pip install -U seesaw
-    git clone https://github.com/ArchiveTeam/niconico-grab
-    cd niconico-grab; ./get-wget-lua.sh
+    git clone https://github.com/ArchiveTeam/super-mario-maker-bookmarks-grab
+    cd super-mario-maker-bookmarks-grab; ./get-wget-lua.sh
     run-pipeline pipeline.py --concurrent 2 --address '127.0.0.1' YOURNICKHERE
 
 ### For FreeBSD:
