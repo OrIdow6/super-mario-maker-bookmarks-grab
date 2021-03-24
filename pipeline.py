@@ -229,7 +229,7 @@ class WgetArgs(object):
 project = Project(
     title = 'super-mario-maker-bookmarks',
     project_html = '''
-    <img class="project-logo" alt="logo" src="https://wiki.archiveteam.org/images/0/02/Niconico_Official_Logo.png" height="50px"/>
+    <img class="project-logo" alt="logo" src="https://wiki.archiveteam.org/images/Archiveteamsmall.png?959ea" height="50px"/>
     <h2>Super Mario Maker Bookmarks <span class="links"><a href="https://supermariomakerbookmark.nintendo.net/">Website</a> &middot; <a href="http://tracker.archiveteam.org/super-mario-maker-bookmarks/">Leaderboard</a></span></h2>
     ''',
     utc_deadline=datetime.datetime.fromtimestamp(1617148800))
