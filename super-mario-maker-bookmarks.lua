@@ -292,12 +292,11 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   end
   
   
-  if status_code == 403 and (string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/profile/")
-                             or string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/")) then
+  if status_code == 403 and (string.match(url["url"], "^https?://supermariomakerbookmark%.nintendo%.net/")) then
     print("You have been banned from the Super Mario Maker website. Switch your worker to another project, and wait a few hours to be unbanned.")
-    print("This should not happen if you are running one concurrency per IP address.")
+    print("This should not happen if you are running one concurrency per IP address. If it does, tell OrIdow6 in the project channel.")
     os.execute("sleep " .. 60) -- Do not spam the tracker (or the site)
-    return wget.actions.EXIT
+    return wget.actions.ABORT
   end
   
   --

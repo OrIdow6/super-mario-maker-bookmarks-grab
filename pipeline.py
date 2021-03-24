@@ -54,9 +54,9 @@ if not WGET_AT:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = '20210227.01'
+VERSION = '20210324.01'
 USER_AGENT = 'Archive Team (ircs://irc.hackint.org#nintendone https://webirc.hackint.org/#irc://irc.hackint.org/#nintendone)'
-TRACKER_ID = 'niconico'
+TRACKER_ID = 'super-mario-maker-bookmarks'
 #TRACKER_HOST = 'legacy-api.arpa.li'
 TRACKER_HOST = "legacy-api.arpa.li"
 MULTI_ITEM_SIZE = 30
@@ -153,7 +153,7 @@ class MaybeSendDoneToTracker(SendDoneToTracker):
 
 CWD = os.getcwd()
 PIPELINE_SHA1 = get_hash(os.path.join(CWD, 'pipeline.py'))
-LUA_SHA1 = get_hash(os.path.join(CWD, 'niconico.lua'))
+LUA_SHA1 = get_hash(os.path.join(CWD, 'super-mario-maker-bookmarks.lua'))
 
 def stats_id_function(item):
     d = {
@@ -173,7 +173,7 @@ class WgetArgs(object):
             '-nv',
             '--content-on-error',
             '--load-cookies', 'cookies.txt',
-            '--lua-script', 'niconico.lua',
+            '--lua-script', 'super-mario-maker-bookmarks.lua',
             '-o', ItemInterpolation('%(item_dir)s/wget.log'),
             '--no-check-certificate',
             '--output-document', ItemInterpolation('%(item_dir)s/wget.tmp'),
@@ -227,18 +227,19 @@ class WgetArgs(object):
 # This will be shown in the warrior management panel. The logo should not
 # be too big. The deadline is optional.
 project = Project(
-    title = 'niconico',
+    title = 'super-mario-maker-bookmarks',
     project_html = '''
     <img class="project-logo" alt="logo" src="https://wiki.archiveteam.org/images/0/02/Niconico_Official_Logo.png" height="50px"/>
-    <h2>Niconico <span class="links"><a href="http://www.nicovideo.jp/">Website</a> &middot; <a href="http://tracker.archiveteam.org/niconico/">Leaderboard</a></span></h2>
-    ''')
+    <h2>Super Mario Maker Bookmarks <span class="links"><a href="https://supermariomakerbookmark.nintendo.net/">Website</a> &middot; <a href="http://tracker.archiveteam.org/super-mario-maker-bookmarks/">Leaderboard</a></span></h2>
+    ''',
+    utc_deadline=datetime.datetime.fromtimestamp(1617148800))
 
 pipeline = Pipeline(
     CheckIP(),
     GetItemFromTracker('http://{}/{}/multi={}/'
         .format(TRACKER_HOST, TRACKER_ID, MULTI_ITEM_SIZE),
         downloader, VERSION),
-    PrepareDirectories(warc_prefix='niconico'),
+    PrepareDirectories(warc_prefix='super-mario-maker-bookmarks'),
     WgetDownload(
         WgetArgs(),
         max_tries=1,
