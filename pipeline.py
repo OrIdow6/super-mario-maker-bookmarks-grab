@@ -54,11 +54,10 @@ if not WGET_AT:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = '20210324.01'
+VERSION = '20210325.01'
 USER_AGENT = 'Archive Team (ircs://irc.hackint.org#nintendone https://webirc.hackint.org/#irc://irc.hackint.org/#nintendone)'
 TRACKER_ID = 'super-mario-maker-bookmarks'
-#TRACKER_HOST = 'legacy-api.arpa.li'
-TRACKER_HOST = "legacy-api.arpa.li"
+TRACKER_HOST = 'legacy-api.arpa.li'
 MULTI_ITEM_SIZE = 30
 
 
@@ -203,10 +202,10 @@ class WgetArgs(object):
             wget_args.extend(['--warc-header', 'x-wget-at-project-item-name: '+item_name])
             wget_args.append('item-name://' + item_name)
             item_type, item_value = item_name.split(':', 1)
-            if item_type == "user":
+            if item_type == 'user':
                 wget_args.extend(['--warc-header', 'super-mario-world-bookmarks-user: '+item_value])
                 wget_args.append('https://supermariomakerbookmark.nintendo.net/profile/' + item_value)
-            elif item_type == "course":
+            elif item_type == 'course':
                 wget_args.extend(['--warc-header', 'super-mario-world-bookmarks-course: ' + item_value])
                 wget_args.append('https://supermariomakerbookmark.nintendo.net/courses/' + item_value)
             else:
@@ -232,7 +231,8 @@ project = Project(
     <img class="project-logo" alt="logo" src="https://wiki.archiveteam.org/images/Archiveteamsmall.png?959ea" height="50px"/>
     <h2>Super Mario Maker Bookmarks <span class="links"><a href="https://supermariomakerbookmark.nintendo.net/">Website</a> &middot; <a href="http://tracker.archiveteam.org/super-mario-maker-bookmarks/">Leaderboard</a></span></h2>
     ''',
-    utc_deadline=datetime.datetime.fromtimestamp(1617148800))
+    utc_deadline=datetime.datetime.fromtimestamp(1617148800)
+)
 
 pipeline = Pipeline(
     CheckIP(),
