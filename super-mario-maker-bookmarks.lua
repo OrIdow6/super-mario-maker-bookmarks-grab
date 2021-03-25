@@ -9,6 +9,10 @@ local item_name_newline = os.getenv("item_name_newline")
 local item_dir = os.getenv('item_dir')
 local warc_file_base = os.getenv('warc_file_base')
 
+local item_value = nil
+local item_type = nil
+local item_name = nil
+
 local url_count = 0
 local tries = 0
 local downloaded = {}
