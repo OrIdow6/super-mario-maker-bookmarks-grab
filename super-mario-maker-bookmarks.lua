@@ -82,9 +82,8 @@ allowed = function(url, parenturl)
     return false
   end
 
-  local course_name = string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/([^%?&/]+)")
+  local course_name = string.match(url, "https?://supermariomakerbookmark%.nintendo%.net/courses/([A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9])")
   if course_name then
-    p_assert(string.match(course_name, "^[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]%-[A-F0-9][A-F0-9][A-F0-9][A-F0-9]$"))
     if not ids[course_name] then
       discovered_items["course:" .. course_name] = true
     end
@@ -333,7 +332,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   if string.match(url["url"], "^https?://supermariomakerbookmark%.nintendo%.net") then
     -- Sleep for up to 2s average
     local now_t = luasocket.gettime()
-    local makeup_time = 2 - (now_t - last_main_site_time)
+    local makeup_time = 4 - (now_t - last_main_site_time)
     if makeup_time > 0 then
       print_debug("Sleeping for main site " .. makeup_time)
       os.execute("sleep " .. makeup_time)
@@ -349,7 +348,7 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   local url_is_essential = false
 
   if status_code == 0
-    or (status_code > 400 and status_code ~= 404) then
+    or (status_code >= 400 and status_code ~= 404) then
     io.stdout:write("Server returned " .. http_stat.statcode .. " (" .. err .. "). Sleeping.\n")
     io.stdout:flush()
     do_retry = true
