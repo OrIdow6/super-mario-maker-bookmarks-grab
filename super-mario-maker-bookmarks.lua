@@ -110,7 +110,9 @@ allowed = function(url, parenturl)
     or string.match(url, "^https?://www%.googletagmanager%.com")
     or string.match(url, "^https?://supermariomakerbookmark%.nintendo%.net/users/") -- Auth
     or string.match(url, "^https?://supermariomakerbookmark%.nintendo%.net/assets/") -- Static
-    or string.match(url, "^https?://www%.esrb%.org/") then
+    or string.match(url, "^https?://www%.esrb%.org/")
+    or string.match(url, "^https?://www.w3.org")
+    or string.match(url, "^https?://w3.org") then
     return false
   end
 
