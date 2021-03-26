@@ -244,8 +244,9 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 
   -- Queue alternate profile picture types
   if string.match(url, "https?://mii%-secure%.cdn%.nintendo%.net/.*png$") then
-    check((string.gsub(url, "normal", "like")))
-    check((string.gsub(url, "like", "normal")))
+    p_assert(string.match(url, "normal_face%.png$") or string.match(url, "like_face%.png$"))
+    check((string.gsub(url, "normal_face%.png$", "like_face%.png")))
+    check((string.gsub(url, "like_face%.png$", "normal_face%.png")))
     print_debug("Queuing alternate face from " .. url)
   end
 
